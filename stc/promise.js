@@ -12,8 +12,7 @@ module.exports = class Promise {
    * @constructor
    */
   constructor (fn) {
-    // TODO assert the executor is a function
-    // TODO assert calling a Promise constructor without new is forbidden
+    _assertFunction(fn)
     internal.execute(this, fn)
   }
 
@@ -91,12 +90,17 @@ module.exports = class Promise {
    * @param {Function} onFulfilled
    * @param {Function} [onRejected]
    * @returns {Promise}
+   * @throws {TypeError}
    * @public
    */
   then (onFulfilled, onRejected = null) {
-    // TODO assert onFulfilled or onRejected is provided
-    // TODO assert provided callback is a function
-    // TODO set a default onRejected
+    onRejected && _assertFunction(onRejected)
+    onFulfilled && _assertFunction(onFulfilled)
+
+    if (!onFulfilled && !onRejected) {
+      throw new TypeError('At least one callback is required.')
+    }
+
     return internal.nest(this, Promise.from(internal.NOOP), onFulfilled, onRejected)
   }
 
@@ -105,10 +109,12 @@ module.exports = class Promise {
    * 
    * @param {Function} onRejected
    * @returns {Promise}
+   * @throws {TypeError}
    * @public
    */
   catch (onRejected) {
-    // TODO assert onRejected is a function
+    _assertFunction(onRejected)
+
     return this.then(null, onRejected)
   }
 
@@ -119,5 +125,18 @@ module.exports = class Promise {
    */
   toString () {
     return '[object Promise]'
+  }
+}
+
+/**
+ * Assert the given argument is a function
+ * 
+ * @param {Any} argument
+ * @throws {TypeError}
+ * @private
+ */
+function _assertFunction (argument) {
+  if (typeof value !== 'function') {
+    throw new TypeError(`Expect function but ${typeof argument} given.`)
   }
 }

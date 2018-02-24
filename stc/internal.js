@@ -1,4 +1,8 @@
 
+'use strict'
+
+const { isArray } = Array
+
 /**
  * @type {Function}
  */
@@ -28,7 +32,7 @@ const FULFILLED = 2
  */
 function execute (promise, fn) {
   if (fn !== NOOP) {
-    // make sure the `resolver` and  the `rejecter`
+    // make sure the `resolver` and/or the `rejecter`
     // are only called once
     let called = false
 
@@ -64,37 +68,37 @@ function execute (promise, fn) {
  * 
  * 
  * @param {Promise} promise
- * @param {Promise} receiver
+ * @param {Promise} next
  * @param {Function} [onFulfilled]
  * @param {Function} [onRejected]
  * @returns {Promise}
  * @public
  */
-function nest (promise, receiver, onFulfilled, onRejected) {
-  receiver._parent = promise
-  receiver._onRejected = onRejected
-  receiver._onFulfilled = onFulfilled
+function nest (promise, next, onFulfilled, onRejected) {
+  next._parent = promise
+  next._onRejected = onRejected
+  next._onFulfilled = onFulfilled
 
   // pending
-  if (!source._state) {
-    if (!promise._receiver) {
-      promise._receiver = receiver
+  if (!promise._state) {
+    if (!promise._next) {
+      promise._next = next
     }
-    else if (Array.isArray(promise._receiver)) {
-      promise._receiver.push(receiver)
+    else if (isArray(promise._next)) {
+      promise._next.push(next)
     }
     else {
-      promise._receiver = [promise._receiver, receiver]
+      promise._next = [promise._next, next]
     }
 
     return
   }
   else {
     // settled
-    _notifyAsync(promise, receiver)
+    _notifyAsync(promise, next)
   }
 
-  return receiver
+  return next
 }
 
 /**
@@ -140,10 +144,10 @@ function _settle (promise, state, value) {
   promise._state = state
   promise._value = value
 
-  // notify children
-  if (promise._receiver) {
-    _notifyAsync(promise, promise._receiver)
-    promise._receiver = null
+  // notify next
+  if (promise._next) {
+    _notifyAsync(promise, promise._next)
+    promise._next = null
   }
 }
 
@@ -156,7 +160,7 @@ function _settle (promise, state, value) {
  */
 function _notifyAsync (fn, promise, receiver) {
   // mutilple receivers
-  if (Array.isArray(receiver)) {
+  if (isArray(receiver)) {
     for (let i = 0; i < receiver.length; i++) {
       setImmediate(_notify, promise, receiver[i])
     }
