@@ -2,7 +2,6 @@
 'use strict'
 
 const internal = require('./internal')
-const { isFunction } = require('util')
 
 // export
 module.exports = class Promise {
@@ -13,7 +12,7 @@ module.exports = class Promise {
    * @constructor
    */
   constructor (fn) {
-    if (!isFunction(fn)) {
+    if (!_isFunction(fn)) {
       throw new TypeError(`Expect function but ${typeof fn} given.`)
     }
 
@@ -91,8 +90,8 @@ module.exports = class Promise {
    */
   then (onFulfilled, onRejected = null) {
     // ignore callbacks
-    if (!isFunction(onRejected)) onRejected = null
-    if (!isFunction(onFulfilled)) onFulfilled = null
+    if (!_isFunction(onRejected)) onRejected = null
+    if (!_isFunction(onFulfilled)) onFulfilled = null
 
     return internal.nest(this, new Promise(internal.NOOP), onFulfilled, onRejected)
   }
@@ -120,12 +119,12 @@ module.exports = class Promise {
 }
 
 /**
- * Assert the given argument is a function
+ * returns true the given argument is a function, false otherwise
  * 
  * @param {Any} arg
- * @throws {TypeError}
+ * @returns {Boolean}
  * @private
  */
-function _assertFunction (arg) {
-  
+function _isFunction (arg) {
+  return typeof arg === 'function'
 }
